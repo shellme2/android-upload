@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:padding="10dp">
+
+    <TextView
+        style="@style/HandlerItemHeader"
+        android:text="基本操作按钮"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/start_btn"
+            style="@style/HandlerItemBtn"
+            android:text="开始"/>
+
+        <Button
+            android:id="@+id/delete_btn"
+            style="@style/HandlerItemBtn"
+            android:layout_toRightOf="@id/start_btn"
+            android:visibility="gone"
+            android:text="删除"/>
+    </RelativeLayout>
+
+</LinearLayout>

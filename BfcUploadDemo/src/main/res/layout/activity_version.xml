@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:id="@+id/activity_version"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@color/color_backgroud"
+              android:orientation="vertical"
+              tools:context="com.bbk.bfcupload.bfcuploadtestdemo.activity.VersionActivity">
+
+    <include layout="@layout/title"/>
+
+
+    <TextView
+        android:id="@+id/tv1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dimen_10dp"
+        android:textColor="@color/color_white"
+        android:textSize="@dimen/dimen_22sp"
+        android:text="TextView"/>
+
+    <TextView
+        android:id="@+id/tv2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/color_white"
+        android:textSize="@dimen/dimen_22sp"
+        android:layout_margin="@dimen/dimen_10dp"
+        android:text="TextView"/>
+
+    <TextView
+        android:id="@+id/tv3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/color_white"
+        android:textSize="@dimen/dimen_22sp"
+        android:layout_margin="@dimen/dimen_10dp"
+        android:text="TextView"/>
+
+    <TextView
+        android:id="@+id/tv4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/color_white"
+        android:textSize="@dimen/dimen_22sp"
+        android:layout_margin="@dimen/dimen_10dp"
+        android:text="TextView"/>
+
+    <TextView
+        android:id="@+id/tv5"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/color_white"
+        android:textSize="@dimen/dimen_22sp"
+        android:layout_margin="@dimen/dimen_10dp"
+        android:text="TextView"/>
+
+    <TextView
+        android:id="@+id/tv6"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/color_white"
+        android:textSize="@dimen/dimen_22sp"
+        android:layout_margin="@dimen/dimen_10dp"
+        android:text="TextView"/>
+
+</LinearLayout>

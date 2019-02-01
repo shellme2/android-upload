@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusableInTouchMode="true">
+    <include
+        android:id="@+id/title_relative"
+        layout="@layout/title"/>
+
+    <Button
+        android:id="@+id/show_config_panel_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title_relative"
+        android:layout_alignParentRight="true"
+        android:text="收起"
+        android:textSize="20sp" />
+
+    <ScrollView
+        android:id="@+id/task_config_panel_sv"
+        android:layout_width="match_parent"
+        android:layout_height="350dp"
+        android:layout_below="@id/show_config_panel_btn"
+        android:background="@color/panel_bg">
+
+        <include
+            android:id="@+id/task_config_layout"
+            layout="@layout/layout_task_config" />
+
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/task_status_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/task_config_panel_sv"
+        android:layout_marginTop="20dp"
+        android:orientation="vertical">
+
+        <include
+            android:id="@+id/task_progress_layout"
+            layout="@layout/layout_task_progress" />
+
+        <ScrollView
+            android:id="@+id/status_panel_sv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <include
+                android:id="@+id/task_status_info_layout"
+                layout="@layout/layout_task_status_info" />
+
+        </ScrollView>
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/handler_panel_content_rly"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+
+        <Button
+            android:id="@+id/show_handler_panel_btn"
+            android:layout_width="160dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginBottom="@dimen/dimen_15sp"
+            android:layout_marginRight="@dimen/dimen_15sp"
+            android:text="操作"
+            android:textSize="20sp" />
+
+        <ScrollView
+            android:id="@+id/handler_panel_sv"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_below="@+id/show_handler_panel_btn"
+            android:background="@color/panel_bg"
+            android:visibility="gone">
+
+            <include
+                android:id="@+id/handler_panel_layout"
+                layout="@layout/layout_operation_panel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </ScrollView>
+
+    </RelativeLayout>
+
+</RelativeLayout>

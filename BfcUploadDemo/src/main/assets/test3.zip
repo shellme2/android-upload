@@ -1,0 +1,886 @@
+/**
+ * 公司：步步高教育电子
+ * 部门：教育电子事业部
+ * 作者：HeChangPeng
+ * 日期：2016-4-27 下午9:58:41
+ */
+package com.eebbk.personalinfo.sdk.requests.impl;
+
+import android.content.Context;
+import android.os.Handler;
+import android.text.TextUtils;
+import android.util.Log;
+
+import com.eebbk.personalinfo.sdk.Facades.DbFacade;
+import com.eebbk.personalinfo.sdk.Facades.NetFacade;
+import com.eebbk.personalinfo.sdk.R;
+import com.eebbk.personalinfo.sdk.columns.ParamKey;
+import com.eebbk.personalinfo.sdk.columns.UserColumns;
+import com.eebbk.personalinfo.sdk.dialogs.InfoChangeListener;
+import com.eebbk.personalinfo.sdk.netpojos.AccountInfoResponseBean;
+import com.eebbk.personalinfo.sdk.netpojos.BaseResponseBean;
+import com.eebbk.personalinfo.sdk.netpojos.DataResponseBean;
+import com.eebbk.personalinfo.sdk.netpojos.EditInfoParamBean;
+import com.eebbk.personalinfo.sdk.netpojos.JsonDataReadListener;
+import com.eebbk.personalinfo.sdk.netpojos.ReadErrorListener;
+import com.eebbk.personalinfo.sdk.netpojos.ToekenDataResponseBean;
+import com.eebbk.personalinfo.sdk.netpojos.TokenBaseResponseBean;
+import com.eebbk.personalinfo.sdk.pojo.AddrBean;
+import com.eebbk.personalinfo.sdk.querys.LoginState;
+import com.eebbk.personalinfo.sdk.querys.QueryType;
+import com.eebbk.personalinfo.sdk.requests.BaseRequest;
+import com.eebbk.personalinfo.sdk.responses.BaseResponse;
+import com.eebbk.personalinfo.sdk.services.AccountSdkLoader;
+import com.eebbk.personalinfo.sdk.updates.UpdateType;
+import com.eebbk.personalinfo.sdk.utils.CommonUtils;
+import com.eebbk.personalinfo.sdk.utils.DesUtils;
+import com.eebbk.personalinfo.sdk.utils.LogUtils;
+import com.eebbk.personalinfo.sdk.utils.ProgressDialogUtils;
+import com.eebbk.personalinfo.sdk.utils.XmlDB;
+import com.google.gson.Gson;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+
+import java.io.IOException;
+import java.util.HashMap;
+
+/**
+ * 提交数据
+ */
+public class BaseRequestImpl implements BaseRequest {
+
+    private static final InternalHandler mHandler = new InternalHandler();
+
+    private static class InternalHandler extends Handler {
+    }
+
+    /**
+     * 本地数据加密解密的钥匙
+     */
+    private static final String PRIVATE_KEY = "com.eebbk.sdk.account.api.deskey";
+    private DbFacade mdbFacade = null;
+    private NetFacade mnetFacade = null;
+    private DesUtils desUtils = null;
+    private static final boolean ISPUBLIC = true;
+
+    public BaseRequestImpl(DbFacade dbFacade, NetFacade netFacade) {
+        mdbFacade = dbFacade;
+        mnetFacade = netFacade;
+        desUtils = new DesUtils(PRIVATE_KEY);
+    }
+
+    @Override
+    public void submitRegister(final Context context, HashMap<String, String> params, BaseResponse response) {
+        returnMessage(response, "register is not public to you", RETURN_FAIL);
+    }
+
+    @Override
+    public void submitLogin(final Context context, HashMap<String, String> params, final BaseResponse baseresponse) {
+        if (!isOk(baseresponse, params)) {
+            return;
+        }
+        String loginstate = (String) AccountSdkLoader.getInstance(context).doQuery(QueryType.QUERY_GET_LOGINSTATE, null);
+        if (loginstate != null && loginstate.equals(LoginState.STATE_HAS_LOGIN)) {
+            returnMessage(baseresponse, "you has login", RETURN_FAIL);
+            return;
+        }
+        String telePhone = params.get(ParamKey.KEY_TELEPHONE);
+        String pwd = params.get(ParamKey.KEY_PASSWORD);
+        if (TextUtils.isEmpty(telePhone) || TextUtils.isEmpty(pwd)) {
+            commonError(baseresponse, "need telephone and password");
+            return;
+        }
+        final ReadErrorListener readListener = new ReadErrorListener(baseresponse);
+        mnetFacade.userLogin(context, telePhone, pwd, new Callback() {
+
+            @Override
+            public void onFailure(Request request, IOException e) {
+                returnMessage(baseresponse, context.getResources().getString(R.string.sdk_string_connect_out), RETURN_FAIL);
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                solveSubmitLogin(context, response, readListener, baseresponse);
+            }
+        });
+    }
+
+    @Override
+    public void findPassWord(final Context context, HashMap<String, String> params, final BaseResponse baseresponse) {
+        if (!isOk(baseresponse, params)) {
+            return;
+        }
+        String loginstate = (String) AccountSdkLoader.getInstance(context).doQuery(QueryType.QUERY_GET_LOGINSTATE, null);
+        if (loginstate != null && loginstate.equals(LoginState.STATE_HAS_LOGIN)) {
+            returnMessage(baseresponse, "you has login", RETURN_FAIL);
+            return;
+        }
+        final String telePhone = params.get(ParamKey.KEY_TELEPHONE);
+        String pwd = params.get(ParamKey.KEY_PASSWORD);
+        String code = params.get(ParamKey.KEY_CHECKCODE);
+        if (TextUtils.isEmpty(telePhone) || TextUtils.isEmpty(pwd) || TextUtils.isEmpty(code)) {
+            commonError(baseresponse, "need telePhone,password and checkCode");
+            return;
+        }
+        if ((!CommonUtils.containsNum(pwd)) || (!CommonUtils.containsLetter(pwd))) {
+            returnMessage(baseresponse, "password must contain number and letter", RETURN_FAIL);
+            return;
+        }
+        final ReadErrorListener readListener = new ReadErrorListener(baseresponse);
+        mnetFacade.findPwd(context, telePhone, pwd, code, new Callback() {
+
+            @Override
+            public void onFailure(Request request, IOException e) {
+                returnMessage(baseresponse, context.getResources().getString(R.string.sdk_string_connect_out), RETURN_FAIL);
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                solveFindPwd(context, response, readListener, baseresponse, telePhone);
+            }
+        });
+    }
+
+    @Override
+    public void sendSafeCode(final Context context, HashMap<String, String> params, final BaseResponse baseresponse) {
+        if (!isOk(baseresponse, params)) {
+            return;
+        }
+        String loginstate = (String) AccountSdkLoader.getInstance(context).doQuery(QueryType.QUERY_GET_LOGINSTATE, null);
+        if (loginstate != null && loginstate.equals(LoginState.STATE_HAS_LOGIN)) {
+            returnMessage(baseresponse, "you has login", RETURN_FAIL);
+            return;
+        }
+        final String telePhone = params.get(ParamKey.KEY_TELEPHONE);
+        if (TextUtils.isEmpty(telePhone)) {
+            commonError(baseresponse, "need telePhone");
+            return;
+        }
+        final JsonDataReadListener readListener = new ReadErrorListener(baseresponse);
+        mnetFacade.checkAccount(context, telePhone, new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                returnMessage(baseresponse, context.getResources().getString(R.string.sdk_string_connect_out), RETURN_FAIL);
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                solveCheckAccount(context, response, readListener, baseresponse, telePhone);
+            }
+        });
+    }
+
+    @Override
+    public void exitSelf(final Context context, HashMap<String, String> params, final BaseResponse baseresponse) {
+        if (!isServiceInit(baseresponse)) {
+            return;
+        }
+        final String telPhone = getTelePhone();
+        if (TextUtils.isEmpty(telPhone)) {
+            commonError(baseresponse, "please login");
+            return;
+        }
+        final ReadErrorListener readListener = new ReadErrorListener(baseresponse);
+        mnetFacade.exitLogin(context, telPhone, new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                returnMessage(baseresponse, context.getResources().getString(R.string.sdk_string_connect_out), RETURN_FAIL);
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                solveExitSelf(context, response, readListener, baseresponse, telPhone);
+            }
+        });
+    }
+
+    @Override
+    public void exitForce(final Context context, HashMap<String, String> params, BaseResponse response) {
+        if (!ISPUBLIC) {
+            commonError(response, "operating not permit");
+            return;
+        }
+        if (!isServiceInit(response)) {
+            return;
+        }
+    }
+
+    @Override
+    public void editPwd(final Context context, HashMap<String, String> params, final BaseResponse baseresponse) {
+        if (!isOk(baseresponse, params)) {
+            return;
+        }
+        String newpwd = params.get(ParamKey.KEY_PASSWORD);
+        String oldpwd = params.get(ParamKey.KEY_OLDPASSWORD);
+        if (TextUtils.isEmpty(newpwd) || TextUtils.isEmpty(oldpwd)) {
+            commonError(baseresponse, "need new password and old password");
+            return;
+        }
+        if ((!CommonUtils.containsNum(newpwd)) || (!CommonUtils.containsLetter(newpwd))) {
+            returnMessage(baseresponse, "password must contain number and letter", RETURN_FAIL);
+            return;
+        }
+        final String telePhone = getTelePhone();
+        if (TextUtils.isEmpty(telePhone)) {
+            commonError(baseresponse, "please login");
+            return;
+        }
+        final ReadErrorListener readListener = new ReadErrorListener(baseresponse);
+        String accountId = (String) AccountSdkLoader.getInstance(context).doQuery(QueryType.QUERY_GET_ACCOUNTID, null);
+        mnetFacade.changePwd(context, telePhone, accountId, newpwd, oldpwd, new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                returnMessage(baseresponse, context.getResources().getString(R.string.sdk_string_connect_out), RETURN_FAIL);
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                solveEditPwd(context, response, readListener, baseresponse, telePhone);
+            }
+        });
+    }
+
+    @Override
+    public void editSchool(final Context context, HashMap<String, String> params, final BaseResponse baseresponse) {
+        if (!isOk(baseresponse, params)) {
+            return;
+        }
+        final String school = params.get(ParamKey.KEY_SCHOOL);
+        if (TextUtils.isEmpty(school)) {
+            commonError(baseresponse, "need school");
+            return;
+        }
+        final String telePhone = getTelePhone();
+        if (TextUtils.isEmpty(telePhone)) {
+            commonError(baseresponse, "please login");
+            return;
+        }
+        final ReadErrorListener readListener = new ReadErrorListener(baseresponse);
+        String accountId = (String) AccountSdkLoader.getInstance(context).doQuery(QueryType.QUERY_GET_ACCOUNTID, null);
+        EditInfoParamBean infoParamBean = new EditInfoParamBean();
+        infoParamBean.setAccountId(accountId + "");
+        infoParamBean.setSchool(school);
+        editInfo(context, infoParamBean, baseresponse, readListener, new InfoChangeListener() {
+            @Override
+            public void onSuccess() {
+                mdbFacade.editSchool(school, telePhone);
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        ProgressDialogUtils.updateOtherApkAccount(context, UpdateType.UPD_SCHOOL, school, telePhone);
+                    }
+                });
+                returnMessage(baseresponse, null, RETURN_SUCCESS);
+            }
+        });
+    }
+
+    @Override
+    public void editUserAlias(final Context context, HashMap<String, String> params, final BaseResponse baseresponse) {
+        if (!isOk(baseresponse, params)) {
+            return;
+        }
+        final String userAlias = params.get(ParamKey.KEY_USER_ALIAS);
+        if (TextUtils.isEmpty(userAlias)) {
+            commonError(baseresponse, "need userAlias");
+            return;
+        }
+        final String telePhone = getTelePhone();
+        if (TextUtils.isEmpty(telePhone)) {
+            commonError(baseresponse, "please login");
+            return;
+        }
+        final ReadErrorListener readListener = new ReadErrorListener(baseresponse);
+        String accountId = (String) AccountSdkLoader.getInstance(context).doQuery(QueryType.QUERY_GET_ACCOUNTID, null);
+        EditInfoParamBean infoParamBean = new EditInfoParamBean();
+        infoParamBean.setAccountId(accountId + "");
+        infoParamBean.setUserAlias(userAlias);
+        editInfo(context, infoParamBean, baseresponse, readListener, new InfoChangeListener() {
+            @Override
+            public void onSuccess() {
+                mdbFacade.editAlias(userAlias, telePhone);
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        ProgressDialogUtils.updateOtherApkAccount(context, UpdateType.UPD_ALIAS, userAlias, telePhone);
+                    }
+                });
+                returnMessage(baseresponse, null, RETURN_SUCCESS);
+            }
+        });
+    }
+
+    @Override
+    public void editGrade(final Context context, HashMap<String, String> params, final BaseResponse baseresponse) {
+        if (!isOk(baseresponse, params)) {
+            return;
+        }
+        final String grade = params.get(ParamKey.KEY_GRADE);
+        if (TextUtils.isEmpty(grade)) {
+            commonError(baseresponse, "need grade");
+            return;
+        }
+        final String telePhone = getTelePhone();
+        if (TextUtils.isEmpty(telePhone)) {
+            commonError(baseresponse, "please login");
+            return;
+        }
+        final ReadErrorListener readListener = new ReadErrorListener(baseresponse);
+        String accountId = (String) AccountSdkLoader.getInstance(context).doQuery(QueryType.QUERY_GET_ACCOUNTID, null);
+        EditInfoParamBean infoParamBean = new EditInfoParamBean();
+        infoParamBean.setAccountId(accountId + "");
+        infoParamBean.setGrade(grade);
+        editInfo(context, infoParamBean, baseresponse, readListener, new InfoChangeListener() {
+            @Override
+            public void onSuccess() {
+                mdbFacade.editGrade(grade, telePhone);
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        ProgressDialogUtils.updateOtherApkAccount(context, UpdateType.UPD_GRADE, grade, telePhone);
+                    }
+                });
+                returnMessage(baseresponse, null, RETURN_SUCCESS);
+            }
+        });
+    }
+
+    @Override
+    public void editSex(final Context context, HashMap<String, String> params, final BaseResponse baseresponse) {
+        if (!isOk(baseresponse, params)) {
+            return;
+        }
+        final String sex = params.get(ParamKey.KEY_SEX);
+        if (TextUtils.isEmpty(sex)) {
+            commonError(baseresponse, "need sex");
+            return;
+        }
+        final String telePhone = getTelePhone();
+        if (TextUtils.isEmpty(telePhone)) {
+            commonError(baseresponse, "please login");
+            return;
+        }
+        final ReadErrorListener readListener = new ReadErrorListener(baseresponse);
+        String accountId = (String) AccountSdkLoader.getInstance(context).doQuery(QueryType.QUERY_GET_ACCOUNTID, null);
+        EditInfoParamBean infoParamBean = new EditInfoParamBean();
+        infoParamBean.setAccountId(accountId + "");
+        infoParamBean.setSex((sex != null && sex.equals("男")) ? "0" : "1");
+        editInfo(context, infoParamBean, baseresponse, readListener, new InfoChangeListener() {
+            @Override
+            public void onSuccess() {
+                mdbFacade.editSex(sex, telePhone);
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        ProgressDialogUtils.updateOtherApkAccount(context, UpdateType.UPD_SEX, sex, telePhone);
+                    }
+                });
+                returnMessage(baseresponse, null, RETURN_SUCCESS);
+            }
+        });
+    }
+
+    @Override
+    public void editClassSubject(final Context context, HashMap<String, String> params, BaseResponse baseresponse) {
+        if (!isOk(baseresponse, params)) {
+            return;
+        }
+    }
+
+    @Override
+    public void editPhoto(final Context context, HashMap<String, String> params, final BaseResponse baseresponse) {
+        if (!isOk(baseresponse, params)) {
+            return;
+        }
+        final String photo = params.get(ParamKey.KEY_HEADPORTRAIT);
+        if (TextUtils.isEmpty(photo)) {
+            commonError(baseresponse, "need photo");
+            return;
+        }
+        final String telePhone = getTelePhone();
+        if (TextUtils.isEmpty(telePhone)) {
+            commonError(baseresponse, "please login");
+            return;
+        }
+        final ReadErrorListener readListener = new ReadErrorListener(baseresponse);
+        String accountId = (String) AccountSdkLoader.getInstance(context).doQuery(QueryType.QUERY_GET_ACCOUNTID, null);
+        EditInfoParamBean infoParamBean = new EditInfoParamBean();
+        infoParamBean.setAccountId(accountId + "");
+        infoParamBean.setHeadPortrait(photo);
+        editInfo(context, infoParamBean, baseresponse, readListener, new InfoChangeListener() {
+            @Override
+            public void onSuccess() {
+                mdbFacade.editPhoto(photo, telePhone);
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        ProgressDialogUtils.updateOtherApkAccount(context, UpdateType.UPD_PHOTO, photo, telePhone);
+                    }
+                });
+                returnMessage(baseresponse, null, RETURN_SUCCESS);
+            }
+        });
+    }
+
+    /**
+     * 将修改提交至服务器
+     */
+    private void editInfo(final Context context, EditInfoParamBean infoParamBean, final BaseResponse baseresponse, final JsonDataReadListener readListener, final InfoChangeListener mlistener) {
+        mnetFacade.userEditInfo(context, infoParamBean, new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                returnMessage(baseresponse, context.getResources().getString(R.string.sdk_string_connect_out), RETURN_FAIL);
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                solveJsonData(context, response, readListener, baseresponse, mlistener);
+            }
+        });
+    }
+
+    @Override
+    public void editAddress(final Context context, HashMap<String, String> params, final BaseResponse baseresponse) {
+        if (!isOk(baseresponse, params)) {
+            return;
+        }
+        final String provinceName = params.get(ParamKey.KEY_PROVINCE);
+        final String countyName = params.get(ParamKey.KEY_DISTRICT);
+        final String cityName = params.get(ParamKey.KEY_CITY);
+        if (TextUtils.isEmpty(provinceName) && TextUtils.isEmpty(countyName) && TextUtils.isEmpty(cityName)) {
+            commonError(baseresponse, "need province , City ,County");
+            return;
+        }
+        final String telePhone = getTelePhone();
+        if (TextUtils.isEmpty(telePhone)) {
+            commonError(baseresponse, "please login");
+            return;
+        }
+        final ReadErrorListener readListener = new ReadErrorListener(baseresponse);
+        String accountId = (String) AccountSdkLoader.getInstance(context).doQuery(QueryType.QUERY_GET_ACCOUNTID, null);
+        EditInfoParamBean infoParamBean = new EditInfoParamBean();
+        infoParamBean.setProvince(provinceName);
+        infoParamBean.setCity(cityName);
+        infoParamBean.setDistrict(countyName);
+        infoParamBean.setAccountId(accountId);
+        CommonUtils.convertNull(infoParamBean);
+        editInfo(context, infoParamBean, baseresponse, readListener, new InfoChangeListener() {
+            @Override
+            public void onSuccess() {
+                mdbFacade.editAddress(provinceName, cityName, countyName, telePhone);
+                AddrBean addrBean = new AddrBean();
+                addrBean.setProvinceName(provinceName);
+                addrBean.setCityName(cityName);
+                addrBean.setCountyName(countyName);
+                CommonUtils.convertNull(addrBean);
+                final String updatecontent = new Gson().toJson(addrBean);
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        ProgressDialogUtils.updateOtherApkAccount(context, UpdateType.UPD_ADDRESS, updatecontent, telePhone);
+                    }
+                });
+                returnMessage(baseresponse, null, RETURN_SUCCESS);
+            }
+        });
+    }
+
+    @Override
+    public void editQq(final Context context, HashMap<String, String> params, final BaseResponse baseresponse) {
+        if (!isOk(baseresponse, params)) {
+            return;
+        }
+        final String qQ = params.get(ParamKey.KEY_QQ);
+        if (TextUtils.isEmpty(qQ)) {
+            commonError(baseresponse, "need qq");
+            return;
+        }
+        final String telePhone = getTelePhone();
+        if (TextUtils.isEmpty(telePhone)) {
+            commonError(baseresponse, "please login");
+            return;
+        }
+        final ReadErrorListener readListener = new ReadErrorListener(baseresponse);
+        String accountId = (String) AccountSdkLoader.getInstance(context).doQuery(QueryType.QUERY_GET_ACCOUNTID, null);
+        EditInfoParamBean infoParamBean = new EditInfoParamBean();
+        infoParamBean.setAccountId(accountId + "");
+        infoParamBean.setQq(qQ);
+        editInfo(context, infoParamBean, baseresponse, readListener, new InfoChangeListener() {
+            @Override
+            public void onSuccess() {
+                mdbFacade.editQq(qQ, telePhone);
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        ProgressDialogUtils.updateOtherApkAccount(context, UpdateType.UPD_QQ, qQ, telePhone);
+                    }
+                });
+                returnMessage(baseresponse, null, RETURN_SUCCESS);
+            }
+        });
+    }
+
+    @Override
+    public void editBirth(final Context context, HashMap<String, String> params, final BaseResponse baseresponse) {
+        if (!isOk(baseresponse, params)) {
+            return;
+        }
+        final String birth = params.get(ParamKey.KEY_BIRTH);
+        if (TextUtils.isEmpty(birth)) {
+            commonError(baseresponse, "need birth");
+            return;
+        }
+        final String telePhone = getTelePhone();
+        if (TextUtils.isEmpty(telePhone)) {
+            commonError(baseresponse, "please login");
+            return;
+        }
+        final ReadErrorListener readListener = new ReadErrorListener(baseresponse);
+        String accountId = (String) AccountSdkLoader.getInstance(context).doQuery(QueryType.QUERY_GET_ACCOUNTID, null);
+        EditInfoParamBean infoParamBean = new EditInfoParamBean();
+        infoParamBean.setAccountId(accountId + "");
+        infoParamBean.setBirthday(birth);
+        editInfo(context, infoParamBean, baseresponse, readListener, new InfoChangeListener() {
+            @Override
+            public void onSuccess() {
+                mdbFacade.editBirth(birth, telePhone);
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        ProgressDialogUtils.updateOtherApkAccount(context, UpdateType.UPD_BIRTH, birth, telePhone);
+                    }
+                });
+                returnMessage(baseresponse, null, RETURN_SUCCESS);
+            }
+        });
+    }
+
+    /**
+     * 处理修改信息的返回数据
+     */
+    private void solveJsonData(Context context, Response response, JsonDataReadListener readListener, BaseResponse baseresponse, InfoChangeListener mlistener) {
+        BaseResponseBean baseResponseBean = mnetFacade.getBaseResponse(context, mHandler, response, readListener, false);
+        if (baseResponseBean == null) {
+            return;
+        }
+        DataResponseBean infoResponseBean = mnetFacade.getDataResponseBean(context, mHandler, baseResponseBean, readListener, false);
+        if (infoResponseBean == null) {
+            return;
+        }
+        int code = infoResponseBean.getStatus();
+        if (code != 101002) {
+
+            LogUtils.e("hecp", "code=" + code + " Message=" + infoResponseBean.getMessage());
+            returnMessage(baseresponse, infoResponseBean.getMessage(), RETURN_FAIL);
+            return;
+        }
+        if (mlistener != null) {
+            mlistener.onSuccess();
+        }
+    }
+
+    /**
+     * 判断是否对PersonService进行了初始化工作
+     */
+    private boolean isServiceInit(BaseResponse response) {
+        if (mdbFacade == null || mnetFacade == null) {
+            commonError(response, "AccountSdkLoader init方法未被调用!");
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * 获取操作数据库时的主键(手机号码)
+     */
+    private String getTelePhone() {
+        String telePhone = (String) mdbFacade.getColumnInfoByName("String", UserColumns.TELEPHONE);
+        LogUtils.i("hecp", "BaseRequestImpl telePhone=" + telePhone);
+        return doDecrypt(telePhone);
+    }
+
+    /**
+     * 解密信息
+     */
+    private String doDecrypt(String value) {
+        try {
+            if (!TextUtils.isEmpty(value)) {
+                return desUtils.decrypt(value);
+            }
+        } catch (Exception e) {
+            LogUtils.w("hecp", e);
+        }
+        return value;
+    }
+
+    /**
+     * 处理退出登录的返回数据
+     */
+    private void solveExitSelf(final Context context, Response response, final JsonDataReadListener readListener, final BaseResponse baseresponse, final String telPhone) {
+        BaseResponseBean baseResponseBean = mnetFacade.getBaseResponse(context, mHandler, response, readListener, false);
+        if (baseResponseBean == null) {
+            return;
+        }
+        DataResponseBean infoResponseBean = mnetFacade.getDataResponseBean(context, mHandler, baseResponseBean, readListener, false);
+        if (infoResponseBean == null) {
+            return;
+        }
+        int code = infoResponseBean.getStatus();
+        if (code == 103003) {
+            LogUtils.d("hecp", "执行到了这个地方，这里是判断");
+//            TokenUtil.getInstance().getNewToken(context);
+            mnetFacade.getNewToken(context, new Callback() {
+                @Override
+                public void onFailure(Request request, IOException e) {
+
+                }
+
+                @Override
+                public void onResponse(Response response) throws IOException {
+                    LogUtils.d("hecp", "执行到了这个地方，这里是解析数据");
+                    getTokenRes(context, response, readListener, baseresponse, telPhone);
+
+                    return ;
+                }
+            });
+	      return;
+        }
+        LogUtils.d("hecp", "执行到了这个地方，这里是退出");
+        if (code != 101002) {
+            LogUtils.e("hecp", "code=" + code + " Message=" + infoResponseBean.getMessage());
+            returnMessage(baseresponse, infoResponseBean.getMessage(), RETURN_FAIL);
+            return;
+        }
+        XmlDB.getInstance(context).saveKeyStringValue(XmlDB.SharedPreferencesKey.LOGINED_TEL, telPhone);
+        XmlDB.getInstance(context).saveKeyStringValue(XmlDB.SharedPreferencesKey.USER_PHOTO, doDecrypt((String) mdbFacade.getColumnInfoByName("String", UserColumns.HEADPORTRAIT)));
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                ProgressDialogUtils.updateOtherApkAccount(context, UpdateType.UPD_PKG, "1");
+            }
+        });
+        mdbFacade.clearUserInfo();
+        returnMessage(baseresponse, null, RETURN_SUCCESS);
+    }
+
+    private void getTokenRes(final Context context, Response response, final JsonDataReadListener readListener, final BaseResponse baseresponse, final String telPhone) {
+        LogUtils.d("hecp", "执行到了这个地方，这里是退出");
+        TokenBaseResponseBean tokenBaseResponseBean = mnetFacade.getTokenBaseResponseByExit(context, response);
+        if (tokenBaseResponseBean == null) {
+            return;
+        }
+        ToekenDataResponseBean tokenDataResponseBean = mnetFacade.getTokenDataResponseBeanByExit(context, tokenBaseResponseBean);
+        int code = tokenDataResponseBean.getStatus();
+        if (code != 101002) {
+            LogUtils.e("hecp", "code=" + code + " Message=" + tokenDataResponseBean.getMessage());
+            returnMessage(baseresponse, tokenDataResponseBean.getMessage(), RETURN_FAIL);
+            return;
+        }
+
+        String accountID = (String) AccountSdkLoader.getInstance(context).doQuery(QueryType.QUERY_GET_ACCOUNTID, null);
+        if (tokenDataResponseBean != null && accountID != null) {
+            if (tokenDataResponseBean.getData() != null) {
+                XmlDB.getInstance(context).saveTokenStringValue(String.valueOf(accountID), tokenDataResponseBean.getData());
+                Log.d("hecp", "token t退出" + tokenDataResponseBean.getData());
+            }
+        }
+        mnetFacade.exitLogin(context, telPhone, new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                returnMessage(baseresponse, context.getResources().getString(R.string.sdk_string_connect_out), RETURN_FAIL);
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                solveExitSelf(context, response, readListener, baseresponse, telPhone);
+            }
+        });
+
+    }
+
+    /**
+     * 处理登录的返回数据
+     */
+    private void solveSubmitLogin(final Context context, Response response, JsonDataReadListener readListener, BaseResponse baseresponse) {
+        BaseResponseBean baseResponseBean = mnetFacade.getBaseResponse(context, mHandler, response, readListener, false);
+        if (baseResponseBean == null) {
+            return;
+        }
+        AccountInfoResponseBean infoResponseBean = mnetFacade.getAccountResponseBean(context, mHandler, baseResponseBean, readListener, false);
+        if (infoResponseBean == null) {
+            return;
+        }
+        mdbFacade.insertOrUpdateAccount(context, CommonUtils.convert2Values(infoResponseBean));
+        XmlDB.getInstance(context).saveKeyBooleanValue(XmlDB.SharedPreferencesKey.IS_FIRST_BOOT, false);
+        XmlDB.getInstance(context).saveKeyStringValue(XmlDB.SharedPreferencesKey.AUTO_ACCOUNT_LIST, "");
+        XmlDB.getInstance(context).saveKeyStringValue(XmlDB.SharedPreferencesKey.LOGINED_TEL, infoResponseBean.getUserName());
+        XmlDB.getInstance(context).saveKeyStringValue(XmlDB.SharedPreferencesKey.USER_PHOTO, infoResponseBean.getHeadPortrait());
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                ProgressDialogUtils.updateOtherApkAccount(context, UpdateType.UPD_PKG, "0");
+                ProgressDialogUtils.notifyLoginSucc(context);
+            }
+        });
+        returnMessage(baseresponse, null, RETURN_SUCCESS);
+    }
+
+    /**
+     * 处理找回密码的返回数据
+     */
+    private void solveFindPwd(final Context context, Response response, JsonDataReadListener readListener, BaseResponse baseresponse, final String telePhone) {
+        BaseResponseBean baseResponseBean = mnetFacade.getBaseResponse(context, mHandler, response, readListener, false);
+        if (baseResponseBean == null) {
+            return;
+        }
+        DataResponseBean infoResponseBean = mnetFacade.getDataResponseBean(context, mHandler, baseResponseBean, readListener, false);
+        if (infoResponseBean == null) {
+            return;
+        }
+        int code = infoResponseBean.getStatus();
+        if (code != 101002) {
+            LogUtils.e("hecp", "code=" + code + " Message=" + infoResponseBean.getMessage());
+            returnMessage(baseresponse, infoResponseBean.getMessage(), RETURN_FAIL);
+            return;
+        }
+        mdbFacade.clearUserInfo();
+        XmlDB.getInstance(context).saveKeyStringValue(XmlDB.SharedPreferencesKey.LOGINED_TEL, telePhone);
+        XmlDB.getInstance(context).saveKeyStringValue(XmlDB.SharedPreferencesKey.USER_PHOTO, null);
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                ProgressDialogUtils.updateOtherApkAccount(context, UpdateType.UPD_StATE, "1", telePhone);
+            }
+        });
+        returnMessage(baseresponse, null, RETURN_SUCCESS);
+    }
+
+    /**
+     * 处理修改密码的返回数据
+     */
+    private void solveEditPwd(final Context context, Response response, JsonDataReadListener readListener, BaseResponse baseresponse, final String telePhone) {
+        BaseResponseBean baseResponseBean = mnetFacade.getBaseResponse(context, mHandler, response, readListener, false);
+        if (baseResponseBean == null) {
+            return;
+        }
+        DataResponseBean infoResponseBean = mnetFacade.getDataResponseBean(context, mHandler, baseResponseBean, readListener, false);
+        if (infoResponseBean == null) {
+            return;
+        }
+        int code = infoResponseBean.getStatus();
+        if (code != 101002) {
+            LogUtils.e("hecp", "code=" + code + " Message=" + infoResponseBean.getMessage());
+            returnMessage(baseresponse, infoResponseBean.getMessage(), RETURN_FAIL);
+            return;
+        }
+        mdbFacade.clearUserInfo();
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                ProgressDialogUtils.updateOtherApkAccount(context, UpdateType.UPD_StATE, "1", telePhone);
+            }
+        });
+        returnMessage(baseresponse, null, RETURN_SUCCESS);
+    }
+
+    /**
+     * 处理查询手机号码是否存在的返回数据
+     */
+    private void solveCheckAccount(final Context context, Response response, final JsonDataReadListener readListener, final BaseResponse baseresponse, String telePhone) {
+        BaseResponseBean baseResponseBean = mnetFacade.getBaseResponse(context, mHandler, response, readListener, true);
+        if (baseResponseBean == null) {
+            return;
+        }
+        DataResponseBean infoResponseBean = mnetFacade.getDataResponseBean(context, mHandler, baseResponseBean, readListener, false);
+        if (infoResponseBean == null) {
+            return;
+        }
+        int code = infoResponseBean.getStatus();
+        if (code != 100004) {
+            LogUtils.e("hecp", "code=" + code + " Message=" + infoResponseBean.getMessage());
+            if (code == 101002) {
+                returnMessage(baseresponse, context.getResources().getString(R.string.sdk_string_account_not_exist), RETURN_FAIL);
+            } else {
+                returnMessage(baseresponse, infoResponseBean.getMessage(), RETURN_FAIL);
+            }
+            return;
+        }
+        mnetFacade.sendSafeCode(context, telePhone, new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                returnMessage(baseresponse, context.getResources().getString(R.string.sdk_string_connect_out), RETURN_FAIL);
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                solveSendCode(context, response, readListener, baseresponse);
+            }
+        });
+    }
+
+    /**
+     * 处理发送验证码的返回数据
+     */
+    private void solveSendCode(Context context, Response response, JsonDataReadListener readListener, BaseResponse baseresponse) {
+        BaseResponseBean baseResponseBean = mnetFacade.getBaseResponse(context, mHandler, response, readListener, false);
+        if (baseResponseBean == null) {
+            return;
+        }
+        DataResponseBean infoResponseBean = mnetFacade.getDataResponseBean(context, mHandler, baseResponseBean, readListener, false);
+        if (infoResponseBean == null) {
+            return;
+        }
+        int code = infoResponseBean.getStatus();
+        if (code != 101002) {
+            LogUtils.e("hecp", "code=" + code + " Message=" + infoResponseBean.getMessage());
+            returnMessage(baseresponse, infoResponseBean.getMessage(), RETURN_FAIL);
+            return;
+        }
+        returnMessage(baseresponse, null, RETURN_SUCCESS);
+    }
+
+    /**
+     * 请求常规性错误返回
+     */
+    private void commonError(BaseResponse response, String errorMessage) {
+        returnMessage(response, errorMessage, RETURN_FAIL);
+        LogUtils.e("hecp", errorMessage);
+    }
+
+    /**
+     * 请求常规性错误判断
+     */
+    private boolean isOk(BaseResponse baseresponse, HashMap<String, String> params) {
+        if (!ISPUBLIC) {
+            commonError(baseresponse, "operating not permit");
+            return false;
+        }
+        if (!isServiceInit(baseresponse)) {
+            return false;
+        }
+        if (params == null) {
+            commonError(baseresponse, "need params");
+            return false;
+        }
+        return true;
+    }
+
+    private static final String RETURN_SUCCESS = "success";
+    private static final String RETURN_FAIL = "fail";
+
+    /**
+     * 返回成功或失败的消息给客户端
+     */
+    private void returnMessage(BaseResponse response, String messageString, String type) {
+        if (response == null) {
+            return;
+        }
+        if (RETURN_SUCCESS.equals(type)) {
+            response.onSuccess();
+        } else {
+            response.onFailure(messageString);
+        }
+    }
+}

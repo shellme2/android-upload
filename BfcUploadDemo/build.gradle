@@ -1,0 +1,74 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 26
+
+    signingConfigs {
+        release {
+            release {
+                keyAlias bfcBuildConfig.signingImoo["keyAlias"]
+                keyPassword bfcBuildConfig.signingImoo["keyPassword"]
+                storeFile file('imoo.jks')
+                storePassword bfcBuildConfig.signingImoo["storePassword"]
+            }
+        }
+    }
+    lintOptions {
+        abortOnError false
+    }
+
+    buildTypes {
+        release {
+            // zipAlign优化
+            zipAlignEnabled true
+            // 移除无用的resource文件
+            shrinkResources false
+            // 混淆
+            minifyEnabled false
+            // 加载默认混淆配置文件
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // 签名
+            signingConfig signingConfigs.release
+        }
+    }
+    defaultConfig {
+        applicationId "com.eebbk.bfc.app.uploaddemo"
+        minSdkVersion bfcBuildConfig.minSdkVersion
+        targetSdkVersion bfcBuildConfig.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+    }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES.txt'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/dependencies.txt'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/LGPL2.1'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/notice.txt'
+    }
+}
+
+dependencies {
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5'
+    releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5'
+    testImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5'
+    // 只在debug模式下工作
+    debugImplementation bfcBuildConfig.deps["bfc-blockcanary"]
+    // 下单版本和自动化测试模式下，屏蔽掉blockcanary，因为该库在检查卡顿问题时会导致应用的性能问题，应谨慎使用
+    releaseImplementation bfcBuildConfig.deps["bfc-blockcanary-no-op"]
+    testImplementation bfcBuildConfig.deps["bfc-blockcanary-no-op"]
+
+    //implementation 'com.eebbk.bfc:bfc-uploadsdk:5.0.8-bugfix'
+     implementation project(':BfcUploadSdk')
+
+    debugImplementation 'com.amitshekhar.android:debug-db:1.0.0'
+    implementation 'com.jakewharton:butterknife:8.8.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
+    implementation files('libs/FileSelector.jar')
+}

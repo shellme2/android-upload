@@ -1,0 +1,67 @@
+<resources>
+    <string name="app_name">上传库DEMO</string>
+    <string name="clond_upload">云上传</string>
+    <string name="clond_private_upload">私有云上传</string>
+    <string name="multiupload">多任务上传</string>
+
+    <string name="ftp_upload">FTP上传</string>
+    <string name="task_name">任务名称：</string>
+
+    <string name="click_add_item">点击添加条目</string>
+    <string name="click_add_file">点击添加上传文件</string>
+    <string name="click_default_upload">点击默认上传测试</string>
+    <string name="click_add_multi">多任务同时上传测试</string>
+    <string name="task_list">任务列表：</string>
+
+    <string name="upload_progress">上传进度：</string>
+    <string name="precent_symbol">%</string>
+    <string name="backslash_symbol">/</string>
+    <string name="zero">0</string>
+    <string name="hundred">100</string>
+    <string name="speed">速度</string>
+    <string name="upload_size">上传大小：</string>
+    <string name="upload_remain_time">剩余时间：</string>
+    <string name="upload_result">上传结果：</string>
+    <string name="upload_task">上传任务</string>
+    <string name="query_all">查询所有</string>
+    <string name="reload">重新上传</string>
+    <string name="reload_sub">重传</string>
+
+    <string name="delete">删除</string>
+    <string name="delete_task">删除任务</string>
+    <string name="query_task">查询任务</string>
+    <string name="delete_all">删除所有</string>
+    <string name="default_file_name_details">assets中的默认图片,先拷贝到SD卡，再进行上传</string>
+    <string name="ids">ids：</string>
+    <string name="task_type">任务类型：</string>
+    <string name="result">结果：</string>
+    <string name="detail">详情</string>
+
+    <string name="name">名称：</string>
+    <string name="type">类型：</string>
+    <string name="status">状态：</string>
+    <string name="file_size">文件大小：</string>
+    <string name="file_address">文件地址：</string>
+    <string name="extras_msg">扩展信息：</string>
+    <string name="last_mode">最近修改时间：</string>
+    <string name="notifacation_is_show">通知栏是否显示：</string>
+    <string name="error_msg">错误信息：</string>
+
+    <string name="service_address">服务器地址：</string>
+    <string name="service_port">服务器端口号：</string>
+    <string name="user_name">用户名：</string>
+    <string name="password">密码：</string>
+    <string name="remote_file_path">远程文件路径：</string>
+    <string name="remote_file_name">远程文件名：</string>
+
+    <string name="main_intraduction">请选择不同的测试模块</string>
+    <string name="main_clound_upload">Clound模式上传</string>
+    <string name="main_private_clound_upload">私有云模式上传</string>
+    <string name="main_http_upload">Http模式上传</string>
+    <string name="main_ftp_upload">FTP模式上传</string>
+
+    <string name="http_url_1">http://172.28.14.145:8080/formpostmultipart</string>
+    <string name="url">URL:</string>
+    <string name="is_ower_write">是否覆盖：</string>
+    <string name="http_output">文本输出：</string>
+</resources>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        style="@style/HandlerItemHeader"
+        android:text="状态信息:"/>
+
+    <TextView
+        android:id="@+id/status_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:text="状态: - -"
+        android:textSize="22sp"/>
+
+    <TextView
+        android:id="@+id/total_size_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:text="总大小: - -"
+        android:textSize="22sp"/>
+
+    <TextView
+        android:id="@+id/finished_size_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:text="已完成: - -"
+        android:textSize="22sp"/>
+
+    <TextView
+        android:id="@+id/speed_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:text="速度: - -"
+        android:textSize="22sp"/>
+
+    <TextView
+        android:id="@+id/reason_code_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:textSize="22sp"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/exception_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:text="异常信息: - -"
+        android:textSize="22sp"/>
+</LinearLayout>

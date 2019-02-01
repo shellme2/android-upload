@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/activity_function"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/color_backgroud">
+
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="@dimen/dimen_10sp"
+        android:layout_marginRight="@dimen/dimen_10sp"
+        android:layout_marginTop="150dp"
+        android:background="@color/color_btn_bg"
+        android:text="基本功能测试"
+        android:textSize="@dimen/dimen_22sp"/>
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/button1"
+        android:layout_marginLeft="@dimen/dimen_10sp"
+        android:layout_marginRight="@dimen/dimen_10sp"
+        android:background="@color/color_btn_bg"
+        android:layout_marginTop="50dp"
+        android:text="成功率测试"
+        android:textSize="@dimen/dimen_22sp"/>
+
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/button2"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="@dimen/dimen_10sp"
+        android:layout_marginRight="@dimen/dimen_10sp"
+        android:background="@color/color_btn_bg"
+        android:layout_marginTop="50dp"
+        android:text="数据库兼容测试"
+        android:textSize="@dimen/dimen_22sp"/>
+
+    <Button
+        android:id="@+id/button4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/button3"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="@dimen/dimen_10sp"
+        android:layout_marginRight="@dimen/dimen_10sp"
+        android:background="@color/color_btn_bg"
+        android:layout_marginTop="50dp"
+        android:text="版本"
+        android:textSize="@dimen/dimen_22sp"/>
+</RelativeLayout>

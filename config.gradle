@@ -1,0 +1,14 @@
+ext {
+    BUILD_BRANCH_NAME='develop'
+    // 配置demo以及所有sdk的版本名称,上传库到私有maven仓库时需配置此项
+    // 名称中以“-beta”结尾将会上传到maven快照仓库中，去掉即可上传到正式发布仓库
+
+    VERSION_NAME='6.0.26'
+    // 配置demo以及所有sdk的版本Code值
+    VERSION_CODE = 86
+
+    dependencies = [
+            "gson": 'com.google.code.gson:gson:2.8.0',
+    ]
+}
+

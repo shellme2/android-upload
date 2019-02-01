@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        style="@style/HandlerItemHeader"
+        android:id="@+id/show_config_tip_tv"
+        android:layout_marginLeft="20dp"
+        android:text="配置参数"/>
+
+    <TextView
+        style="@style/UploadConfigHeader"
+        android:id="@+id/file_path_tv"
+        android:text="文件路径:"
+        android:layout_below="@+id/show_config_tip_tv"/>
+
+    <Button
+        android:id="@+id/select_file_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/file_path_tv"
+        android:text="选文件"
+        android:textSize="20sp"/>
+
+    <TextView
+        style="@style/UploadConfigContent"
+        android:id="@+id/show_file_path_tv"
+        android:layout_width="match_parent"
+        android:layout_toRightOf="@id/file_path_tv"
+        android:layout_toLeftOf="@id/select_file_btn"
+        android:layout_alignTop="@+id/file_path_tv"
+        android:layout_alignBottom="@+id/file_path_tv"
+        android:text=" - - "/>
+
+    <TextView
+        style="@style/UploadConfigHeader"
+        android:id="@+id/id_tv"
+        android:layout_below="@id/select_file_btn"
+        android:text="ID:"/>
+
+    <TextView
+        style="@style/UploadConfigContent"
+        android:id="@+id/show_id_tv"
+        android:layout_below="@id/select_file_btn"
+        android:layout_toRightOf="@id/id_tv"
+        android:layout_alignTop="@id/id_tv"
+        android:layout_alignBottom="@id/id_tv"
+        android:text=" - - "/>
+
+    <TextView
+        style="@style/UploadConfigHeader"
+        android:id="@+id/task_name_tv"
+        android:layout_below="@id/id_tv"
+        android:text="任务名:"/>
+
+    <EditText
+        style="@style/UploadConfigContent"
+        android:id="@+id/show_task_name_tv"
+        android:layout_width="match_parent"
+        android:layout_below="@+id/id_tv"
+        android:layout_toRightOf="@id/task_name_tv"
+        android:maxLines="2"
+        android:text="默认任务名"/>
+
+    <TextView
+        style="@style/UploadConfigHeader"
+        android:id="@+id/network_type_tv"
+        android:layout_below="@id/show_task_name_tv"
+        android:text="网络类型:"/>
+
+    <CheckBox
+        style="@style/UploadConfigContent"
+        android:id="@+id/network_wifi_chx"
+        android:text="WIFI"
+        android:checked="true"
+        android:layout_below="@id/show_task_name_tv"
+        android:layout_toRightOf="@id/network_type_tv"
+        android:layout_alignTop="@+id/network_type_tv"
+        android:layout_alignBottom="@+id/network_type_tv"/>
+
+    <CheckBox
+        style="@style/UploadConfigContent"
+        android:id="@+id/network_mobile_chx"
+        android:text="Mobile"
+        android:layout_below="@id/network_wifi_chx"
+        android:layout_toRightOf="@id/network_wifi_chx"
+        android:layout_alignTop="@+id/network_type_tv"
+        android:layout_alignBottom="@+id/network_type_tv"/>
+
+    <CheckBox
+        style="@style/UploadConfigContent"
+        android:id="@+id/network_bluetooth_chx"
+        android:text="Bluetooth"
+        android:checked="true"
+        android:layout_below="@id/network_mobile_chx"
+        android:layout_toRightOf="@id/network_mobile_chx"
+        android:layout_alignTop="@+id/network_type_tv"
+        android:layout_alignBottom="@+id/network_type_tv"/>
+
+    <TextView
+        style="@style/UploadConfigHeader"
+        android:id="@+id/file_url_tv"
+        android:layout_below="@id/network_bluetooth_chx"
+        android:text="上传地址:"/>
+
+    <TextView
+        style="@style/UploadConfigContent"
+        android:id="@+id/show_file_url_tv"
+        android:layout_below="@id/network_bluetooth_chx"
+        android:layout_toRightOf="@id/file_url_tv"
+        android:layout_alignTop="@id/file_url_tv"
+        android:layout_alignBottom="@id/file_url_tv"
+        android:text=" - - "/>
+</RelativeLayout>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@color/color_backgroud">
+
+    <include layout="@layout/title"/>
+
+
+    <Button
+        android:text="Http上传300个不同的文件"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:background="@color/color_btn_bg"
+        android:textSize="@dimen/dimen_22sp"
+        android:layout_marginTop="50dp"
+        android:id="@+id/uploadtype_button1" />
+    <Button
+        android:text="云上传300个不同的文件"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:background="@color/color_btn_bg"
+        android:textSize="@dimen/dimen_22sp"
+        android:layout_marginTop="50dp"
+        android:id="@+id/uploadtype_button2" />
+
+    <TextView
+        android:id="@+id/httpuploadcount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dimen_22sp"
+        android:layout_marginLeft="@dimen/dimen_15sp"
+        android:textSize="@dimen/dimen_24sp"
+        android:textColor="@color/color_white"
+        />
+
+    <TextView
+        android:id="@+id/httpuploadsuccess"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dimen_22sp"
+        android:layout_marginLeft="@dimen/dimen_15sp"
+        android:textSize="@dimen/dimen_24sp"
+        android:textColor="@color/color_white"
+        />
+
+    <TextView
+        android:id="@+id/httpuploadfail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dimen_22sp"
+        android:layout_marginLeft="@dimen/dimen_15sp"
+        android:textSize="@dimen/dimen_24sp"
+        android:textColor="@color/color_white"
+        />
+
+    <TextView
+        android:id="@+id/httpuploadfailinfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dimen_22sp"
+        android:layout_marginLeft="@dimen/dimen_15sp"
+        android:textSize="@dimen/dimen_24sp"
+        android:textColor="@color/color_white"
+        android:text=""
+        />
+
+
+</LinearLayout>

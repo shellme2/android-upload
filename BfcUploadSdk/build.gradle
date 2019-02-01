@@ -1,0 +1,68 @@
+apply plugin: 'com.android.library'
+def gitHead = 'git rev-parse --short HEAD'.execute([], project.rootDir).text.trim()
+def gitTag = 'git describe --tags'.execute([], project.rootDir).text.trim()
+def buildTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC"))
+
+android {
+
+    //   useLibrary 'org.apache.http.legacy'此处jenkins构建时需要，平常开发或本地构建测试版本需要注释或者需要maven版本请注释，
+    //另外，关于demo构建的，需要jenkins就引用bfc公共配置，自己编译就使用25的版本
+    useLibrary 'org.apache.http.legacy'
+
+    compileSdkVersion bfcBuildConfig.compileSdkVersion
+
+    lintOptions {
+        abortOnError false
+    }
+
+    defaultConfig {
+        minSdkVersion bfcBuildConfig.minSdkVersion
+        targetSdkVersion bfcBuildConfig.targetSdkVersion
+        versionCode VERSION_CODE as int
+        versionName VERSION_NAME
+
+        buildConfigField "String", "GIT_HEAD", "\"${gitHead}\""
+        buildConfigField "String", "GIT_TAG", "\"${gitTag}\""
+        buildConfigField "String", "BUILD_TIME", "\"${buildTime}\""
+        buildConfigField "String", "LIBRARY_NAME", "\"${POM_ARTIFACT_ID}\""
+    }
+    sourceSets {
+        main {
+        }
+        debug.setRoot('build-types/debug')
+        release.setRoot('build-types/release')
+    }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES.txt'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/dependencies.txt'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/LGPL2.1'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/notice.txt'
+    }
+
+}
+apply from: "http://172.28.2.93/bfc/Bfc/raw/develop/common-config/maven-push.gradle"
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation bfcBuildConfig.deps["bfc-log"]
+    implementation bfcBuildConfig.deps.'bfc-behavior-aidl'
+    implementation bfcBuildConfig.deps["old-bfc-desencrypt"]
+    implementation bfcBuildConfig.deps["bfc-sequencetools-json"]
+    implementation bfcBuildConfig.deps["httpmime"]
+    implementation 'com.evernote:android-job:1.2.6'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.2'
+    api 'com.qiniu:qiniu-android-sdk:7.3.10'
+    def room_version = "1.1.1"
+    implementation ("android.arch.persistence.room:runtime:$room_version")
+    annotationProcessor "android.arch.persistence.room:compiler:$room_version"
+    // use kapt for Kotlin
+    // optional - RxJava support for Room
+    implementation "android.arch.persistence.room:rxjava2:$room_version"
+}
